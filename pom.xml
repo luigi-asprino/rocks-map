@@ -22,6 +22,13 @@
 		</plugins>
 
 	</build>
+	
+	<properties>
+		<apachecommonscsv.version>1.5</apachecommonscsv.version>
+		<junit.version>3.8.1</junit.version>
+		<opencsv.version>2.3</opencsv.version>
+		<apachejena.version>3.12.0</apachejena.version>
+	</properties>
 
 	<dependencies>
 
@@ -32,12 +39,6 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-core</artifactId>
-			<version>2.9.9</version>
-		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
 		<dependency>
@@ -95,6 +96,20 @@
 			<version>23.0</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-csv -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+			<version>1.5</version>
+		</dependency>
+		
+		<!-- http://mvnrepository.com/artifact/net.sf.opencsv/opencsv -->
+		<dependency>
+			<groupId>net.sf.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>${opencsv.version}</version>
+		</dependency>
+
 
 		<!-- DSI Utils -->
 		<dependency>
@@ -106,6 +121,14 @@
 			<groupId>it.unimi.dsi</groupId>
 			<artifactId>fastutil</artifactId>
 			<version>8.2.2</version>
+		</dependency>
+		
+		<!-- Apache Jena -->
+		<dependency>
+			<groupId>org.apache.jena</groupId>
+			<artifactId>apache-jena-libs</artifactId>
+			<type>pom</type>
+			<version>${apachejena.version}</version>
 		</dependency>
 
 	</dependencies>
