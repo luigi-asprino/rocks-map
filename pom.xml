@@ -24,10 +24,17 @@
 	</build>
 	
 	<properties>
-		<apachecommonscsv.version>1.5</apachecommonscsv.version>
 		<junit.version>3.8.1</junit.version>
 		<opencsv.version>2.3</opencsv.version>
 		<apachejena.version>3.12.0</apachejena.version>
+		<apachecommons.version>2.1.1</apachecommons.version>
+		<commons-beanutils.version>1.9.3</commons-beanutils.version>
+		<sl4j.version>1.7.7</sl4j.version>
+		<rockdb.version>5.5.1</rockdb.version>
+		<guava.version>23.0</guava.version>
+		<apachecommonscsv.version>1.5</apachecommonscsv.version>
+		<dsiutils.version>2.5.4</dsiutils.version>
+		<dsifastutil.version>8.2.2</dsifastutil.version>
 	</properties>
 
 	<dependencies>
@@ -35,7 +42,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -44,44 +51,44 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-configuration2</artifactId>
-			<version>2.1.1</version>
+			<version>${apachecommons.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-beanutils</groupId>
 			<artifactId>commons-beanutils</artifactId>
-			<version>1.9.3</version>
+			<version>${commons-beanutils.version}</version>
 		</dependency>
 
 		<!-- Logging LOG4J - SLF4J -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.7.7</version>
+			<version>${sl4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-jdk14</artifactId>
-			<version>1.7.7</version>
+			<version>${sl4j.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.rocksdb</groupId>
 			<artifactId>rocksdbjni</artifactId>
-			<version>5.5.1</version>
+			<version>${rockdb.version}</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>23.0</version>
+			<version>${guava.version}</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-csv -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-csv</artifactId>
-			<version>1.5</version>
+			<version>${apachecommonscsv.version}</version>
 		</dependency>
 		
 		<!-- http://mvnrepository.com/artifact/net.sf.opencsv/opencsv -->
@@ -96,12 +103,12 @@
 		<dependency>
 			<groupId>it.unimi.dsi</groupId>
 			<artifactId>dsiutils</artifactId>
-			<version>2.5.4</version>
+			<version>${dsiutils.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>it.unimi.dsi</groupId>
 			<artifactId>fastutil</artifactId>
-			<version>8.2.2</version>
+			<version>${dsifastutil.version}</version>
 		</dependency>
 		
 		<!-- Apache Jena -->
