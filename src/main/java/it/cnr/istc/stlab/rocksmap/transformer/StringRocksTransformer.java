@@ -1,15 +1,14 @@
 package it.cnr.istc.stlab.rocksmap.transformer;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Set;
 
-import it.unimi.dsi.fastutil.io.BinIO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class StringRocksTransformer implements RocksTransformer<String> {
+
+	private ObjectMapper om = new ObjectMapper();
 
 	@Override
 	public String transform(byte[] value) {
@@ -24,29 +23,13 @@ public class StringRocksTransformer implements RocksTransformer<String> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Collection<String> transformCollection(byte[] value) {
-		ByteArrayInputStream bais = new ByteArrayInputStream(value);
-		DataInputStream dis = new DataInputStream(bais);
 		Collection<String> r = null;
 		try {
-			r = (Collection<String>) BinIO.loadObject(dis);
+			r = (Set<String>) om.readValue(value, Set.class);
 		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
 		return r;
-	}
-
-	@Override
-	public byte[] transformCollection(Collection<String> value) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		DataOutputStream dos = new DataOutputStream(baos);
-		try {
-			BinIO.storeObject(value, dos);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return baos.toByteArray();
 	}
 
 }
