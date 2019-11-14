@@ -36,22 +36,24 @@ public class RocksMultiMap<K, V> implements Multimap<K, V>, Closeable {
 
 	private static final char SEPARATOR_DUMP = '\t';
 
-	public RocksMultiMap(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer) throws RocksDBException {
+	public RocksMultiMap(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer)
+			throws RocksDBException {
 		RocksDB.loadLibrary();
 		this.keyTransformer = keyTransformer;
 		this.valueTransformer = valueTransformer;
 		this.rocksDBPath = rocksDBPath;
 		File f = new File(rocksDBPath);
-		logger.info("{} does not exist!", rocksDBPath);
 		Options options = new Options();
 		options.setCreateIfMissing(true);
 		options.setIncreaseParallelism(8);
 		f.mkdirs();
+		logger.info("Opening {}", rocksDBPath);
 		db = RocksDB.open(options, rocksDBPath);
 
 	}
 
-	public RocksMultiMap(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer, String dumpFile) throws RocksDBException, IOException {
+	public RocksMultiMap(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer,
+			String dumpFile) throws RocksDBException, IOException {
 		RocksDB.loadLibrary();
 		this.keyTransformer = keyTransformer;
 		this.valueTransformer = valueTransformer;
@@ -72,7 +74,8 @@ public class RocksMultiMap<K, V> implements Multimap<K, V>, Closeable {
 
 	private void populateRocksDBFromDump(String dumpFile) throws IOException, RocksDBException {
 		logger.info("Appending Dump to DB");
-		CSVReader csvr = new CSVReader(new FileReader(new File(dumpFile)), SEPARATOR_DUMP, CSVWriter.NO_QUOTE_CHARACTER);
+		CSVReader csvr = new CSVReader(new FileReader(new File(dumpFile)), SEPARATOR_DUMP,
+				CSVWriter.NO_QUOTE_CHARACTER);
 		String[] line;
 		while ((line = csvr.readNext()) != null) {
 			db.put(line[0].getBytes(), line[1].getBytes());
@@ -273,14 +276,14 @@ public class RocksMultiMap<K, V> implements Multimap<K, V>, Closeable {
 	}
 
 	public void close() {
-		logger.info("Closing {}... skipped", rocksDBPath);
-		// db.getDefaultColumnFamily().close();
-		// db.close();
+		logger.info("Closing {}", this.rocksDBPath);
+//		db.close();
 	}
 
 	public void toFile() throws IOException {
 		logger.info("Dumping " + rocksDBPath + "/dump.tsv");
-		CSVWriter csvw = new CSVWriter(new FileWriter(new File(rocksDBPath + "/dump.tsv")), SEPARATOR_DUMP, CSVWriter.NO_QUOTE_CHARACTER);
+		CSVWriter csvw = new CSVWriter(new FileWriter(new File(rocksDBPath + "/dump.tsv")), SEPARATOR_DUMP,
+				CSVWriter.NO_QUOTE_CHARACTER);
 		RocksIterator ri = db.newIterator();
 		ri.seekToFirst();
 		while (ri.isValid()) {

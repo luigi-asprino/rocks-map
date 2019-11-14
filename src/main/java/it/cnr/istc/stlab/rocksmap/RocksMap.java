@@ -32,7 +32,8 @@ public class RocksMap<K, V> implements Map<K, V>, Closeable {
 
 	private static final char SEPARATOR_DUMP = '\t';
 
-	public RocksMap(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer) throws RocksDBException {
+	public RocksMap(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer)
+			throws RocksDBException {
 		RocksDB.loadLibrary();
 		this.keyTransformer = keyTransformer;
 		this.valueTransformer = valueTransformer;
@@ -43,10 +44,10 @@ public class RocksMap<K, V> implements Map<K, V>, Closeable {
 		options.setIncreaseParallelism(8);
 		f.mkdirs();
 		db = RocksDB.open(options, rocksDBPath);
-
 	}
 
-	public RocksMap(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer, String dumpFile) throws RocksDBException, IOException {
+	public RocksMap(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer,
+			String dumpFile) throws RocksDBException, IOException {
 		RocksDB.loadLibrary();
 		this.keyTransformer = keyTransformer;
 		this.valueTransformer = valueTransformer;
@@ -66,7 +67,8 @@ public class RocksMap<K, V> implements Map<K, V>, Closeable {
 
 	private void populateRocksDBFromDump(String dumpFile) throws IOException, RocksDBException {
 		logger.info("Appending Dump to DB");
-		CSVReader csvr = new CSVReader(new FileReader(new File(dumpFile)), SEPARATOR_DUMP, CSVWriter.NO_QUOTE_CHARACTER);
+		CSVReader csvr = new CSVReader(new FileReader(new File(dumpFile)), SEPARATOR_DUMP,
+				CSVWriter.NO_QUOTE_CHARACTER);
 		String[] line;
 		while ((line = csvr.readNext()) != null) {
 			db.put(line[0].getBytes(), line[1].getBytes());
@@ -195,7 +197,8 @@ public class RocksMap<K, V> implements Map<K, V>, Closeable {
 
 	public void toFile() throws IOException {
 		logger.info("Dumping " + rocksDBPath + "/dump.tsv");
-		CSVWriter csvw = new CSVWriter(new FileWriter(new File(rocksDBPath + "/dump.tsv")), SEPARATOR_DUMP, CSVWriter.NO_QUOTE_CHARACTER);
+		CSVWriter csvw = new CSVWriter(new FileWriter(new File(rocksDBPath + "/dump.tsv")), SEPARATOR_DUMP,
+				CSVWriter.NO_QUOTE_CHARACTER);
 		RocksIterator ri = db.newIterator();
 		ri.seekToFirst();
 		while (ri.isValid()) {
@@ -208,9 +211,8 @@ public class RocksMap<K, V> implements Map<K, V>, Closeable {
 	}
 
 	public void close() {
-		logger.info("Closing {}... skipped", rocksDBPath);
-		// db.getDefaultColumnFamily().close();
-		// db.close();
+		logger.info("Closing {}",this.rocksDBPath);
+//		db.close();
 	}
 
 	public Iterator<Entry<K, V>> iterator() {
