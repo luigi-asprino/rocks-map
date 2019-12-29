@@ -132,6 +132,7 @@
 		<apachecommonscsv.version>1.5</apachecommonscsv.version>
 		<dsiutils.version>2.5.4</dsiutils.version>
 		<dsifastutil.version>8.2.2</dsifastutil.version>
+		<jackson.version>2.10.1</jackson.version>
 	</properties>
 
 	<dependencies>
@@ -144,19 +145,13 @@
 		</dependency>
 
 
-		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>2.9.9</version>
-		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind 
+			<dependency> <groupId>com.fasterxml.jackson.core</groupId> <artifactId>jackson-databind</artifactId> 
+			<version>2.9.9</version> </dependency> -->
 
-		<!-- https://mvnrepository.com/artifact/au.com.bytecode/opencsv -->
-		<dependency>
-			<groupId>au.com.bytecode</groupId>
-			<artifactId>opencsv</artifactId>
-			<version>2.4</version>
-		</dependency>
+		<!-- https://mvnrepository.com/artifact/au.com.bytecode/opencsv <dependency> 
+			<groupId>au.com.bytecode</groupId> <artifactId>opencsv</artifactId> <version>2.4</version> 
+			</dependency> -->
 
 
 
@@ -200,12 +195,9 @@
 			<version>${guava.version}</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-csv -->
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-csv</artifactId>
-			<version>${apachecommonscsv.version}</version>
-		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-csv 
+			<dependency> <groupId>org.apache.commons</groupId> <artifactId>commons-csv</artifactId> 
+			<version>${apachecommonscsv.version}</version> </dependency> -->
 
 		<!-- http://mvnrepository.com/artifact/net.sf.opencsv/opencsv -->
 		<dependency>
@@ -227,13 +219,16 @@
 			<version>${dsifastutil.version}</version>
 		</dependency>
 
-		<!-- Apache Jena -->
+		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
 		<dependency>
-			<groupId>org.apache.jena</groupId>
-			<artifactId>apache-jena-libs</artifactId>
-			<type>pom</type>
-			<version>${apachejena.version}</version>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
 		</dependency>
+
+
+		<!-- Apache Jena <dependency> <groupId>org.apache.jena</groupId> <artifactId>apache-jena-libs</artifactId> 
+			<type>pom</type> <version>${apachejena.version}</version> </dependency> -->
 
 	</dependencies>
 </project>
