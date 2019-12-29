@@ -1,10 +1,6 @@
 package it.cnr.istc.stlab.rocksmap;
 
 import java.io.Closeable;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -12,8 +8,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.rocksdb.Options;
-import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
 import org.slf4j.Logger;
@@ -22,105 +16,74 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 
-import au.com.bytecode.opencsv.CSVReader;
-import au.com.bytecode.opencsv.CSVWriter;
 import it.cnr.istc.stlab.rocksmap.transformer.RocksTransformer;
 
-public class RocksMultiMap<K, V> implements Multimap<K, V>, Closeable {
+public class RocksMultiMap<K, V> extends RocksDBWrapper<K, V> implements Multimap<K, V>, Closeable {
 
-	protected RocksDB db;
-	protected RocksTransformer<K> keyTransformer;
-	protected RocksTransformer<V> valueTransformer;
-	protected String rocksDBPath;
 	protected static Logger logger = LoggerFactory.getLogger(RocksMultiMap.class);
-
-	private static final char SEPARATOR_DUMP = '\t';
 
 	public RocksMultiMap(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer)
 			throws RocksDBException {
-		RocksDB.loadLibrary();
-		this.keyTransformer = keyTransformer;
-		this.valueTransformer = valueTransformer;
-		this.rocksDBPath = rocksDBPath;
-		File f = new File(rocksDBPath);
-		Options options = new Options();
-		options.setCreateIfMissing(true);
-		options.setIncreaseParallelism(8);
-		f.mkdirs();
-		logger.info("Opening {}", rocksDBPath);
-		db = RocksDB.open(options, rocksDBPath);
-
-	}
-
-	public RocksMultiMap(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer,
-			String dumpFile) throws RocksDBException, IOException {
-		RocksDB.loadLibrary();
-		this.keyTransformer = keyTransformer;
-		this.valueTransformer = valueTransformer;
-		this.rocksDBPath = rocksDBPath;
-		File f = new File(rocksDBPath);
-		if (f.exists()) {
-			logger.info("{}  exist!", rocksDBPath);
-			Options options = new Options();
-			options.setCreateIfMissing(true);
-			new File(rocksDBPath).mkdirs();
-			db = RocksDB.open(options, rocksDBPath);
-			logger.info("DB exists appending dump!");
-		} else {
-			db = RocksDB.open(rocksDBPath);
-		}
-		populateRocksDBFromDump(dumpFile);
-	}
-
-	private void populateRocksDBFromDump(String dumpFile) throws IOException, RocksDBException {
-		logger.info("Appending Dump to DB");
-		CSVReader csvr = new CSVReader(new FileReader(new File(dumpFile)), SEPARATOR_DUMP,
-				CSVWriter.NO_QUOTE_CHARACTER);
-		String[] line;
-		while ((line = csvr.readNext()) != null) {
-			db.put(line[0].getBytes(), line[1].getBytes());
-		}
-		csvr.close();
-	}
-
-	public String getRocksDBPath() {
-		return this.rocksDBPath;
+		super(rocksDBPath, keyTransformer, valueTransformer);
 	}
 
 	@Override
 	public int size() {
-		// TODO Auto-generated method stub
+		// TODO
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public boolean isEmpty() {
+		// TODO
 		throw new UnsupportedOperationException();
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public boolean containsKey(Object key) {
-		@SuppressWarnings("unchecked")
-		K k = (K) key;
-		try {
-			byte[] v = db.get(keyTransformer.transform(k));
-			return v != null;
-		} catch (RocksDBException e) {
-			e.printStackTrace();
-		}
-		return false;
 	}
 
 	@Override
 	public boolean containsValue(Object value) {
-		// TODO Auto-generated method stub
+		// TODO
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public boolean containsEntry(Object key, Object value) {
-		// TODO Auto-generated method stub
+		// TODO
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean putAll(Multimap<? extends K, ? extends V> multimap) {
+		// TODO
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Collection<V> replaceValues(K key, Iterable<? extends V> values) {
+		// TODO
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean remove(Object key, Object value) {
+		// TODO
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Multiset<K> keys() {
+		// TODO
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Collection<Entry<K, V>> entries() {
+		// TODO
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Map<K, Collection<V>> asMap() {
+		// TODO
 		throw new UnsupportedOperationException();
 	}
 
@@ -138,17 +101,12 @@ public class RocksMultiMap<K, V> implements Multimap<K, V>, Closeable {
 		value_collection.add(value);
 
 		try {
-			db.put(keyTransformer.transform(key), valueTransformer.transformCollection(value_collection));
+			super.db.put(super.keyTransformer.transform(key),
+					super.valueTransformer.transformCollection(value_collection));
 		} catch (RocksDBException e) {
 			e.printStackTrace();
 		}
 		return true;
-	}
-
-	@Override
-	public boolean remove(Object key, Object value) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -167,18 +125,6 @@ public class RocksMultiMap<K, V> implements Multimap<K, V>, Closeable {
 	}
 
 	@Override
-	public boolean putAll(Multimap<? extends K, ? extends V> multimap) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Collection<V> replaceValues(K key, Iterable<? extends V> values) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public Collection<V> removeAll(Object key) {
 		@SuppressWarnings("unchecked")
 		K keyk = (K) key;
@@ -190,30 +136,6 @@ public class RocksMultiMap<K, V> implements Multimap<K, V>, Closeable {
 			e.printStackTrace();
 		}
 		return values;
-	}
-
-	@Override
-	public void clear() {
-		RocksIterator ri = db.newIterator();
-		ri.seekToFirst();
-		byte[] first = ri.key();
-		ri.seekToLast();
-		byte[] last = ri.key();
-		try {
-			db.deleteRange(first, last);
-			db.delete(last);
-		} catch (RocksDBException e) {
-			e.printStackTrace();
-		}
-		// while (ri.isValid()) {
-		// byte[] key = ri.key();
-		// try {
-		// db.delete(key);
-		// } catch (RocksDBException e) {
-		// e.printStackTrace();
-		// }
-		// ri.next();
-		// }
 	}
 
 	@Override
@@ -232,25 +154,6 @@ public class RocksMultiMap<K, V> implements Multimap<K, V>, Closeable {
 	}
 
 	@Override
-	public Set<K> keySet() {
-		Set<K> keys = new HashSet<>();
-		RocksIterator ri = db.newIterator();
-		ri.seekToFirst();
-		while (ri.isValid()) {
-			byte[] key = ri.key();
-			keys.add(keyTransformer.transform(key));
-			ri.next();
-		}
-		return keys;
-	}
-
-	@Override
-	public Multiset<K> keys() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public Collection<V> values() {
 		Set<V> values = new HashSet<>();
 		RocksIterator ri = db.newIterator();
@@ -260,40 +163,8 @@ public class RocksMultiMap<K, V> implements Multimap<K, V>, Closeable {
 			values.addAll(valueTransformer.transformCollection(value));
 			ri.next();
 		}
+		ri.close();
 		return values;
-	}
-
-	@Override
-	public Collection<Entry<K, V>> entries() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Map<K, Collection<V>> asMap() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
-	}
-
-	public void close() {
-		logger.info("Closing {}", this.rocksDBPath);
-//		db.close();
-	}
-
-	public void toFile() throws IOException {
-		logger.info("Dumping " + rocksDBPath + "/dump.tsv");
-		CSVWriter csvw = new CSVWriter(new FileWriter(new File(rocksDBPath + "/dump.tsv")), SEPARATOR_DUMP,
-				CSVWriter.NO_QUOTE_CHARACTER);
-		RocksIterator ri = db.newIterator();
-		ri.seekToFirst();
-		while (ri.isValid()) {
-			byte[] key = ri.key();
-			byte[] val = ri.value();
-			csvw.writeNext(new String[] { new String(key), new String(val) });
-			ri.next();
-		}
-		csvw.close();
-		logger.info("Dumped");
 	}
 
 	public void putMap(Map<K, Collection<V>> map) {
@@ -309,7 +180,11 @@ public class RocksMultiMap<K, V> implements Multimap<K, V>, Closeable {
 
 			@Override
 			public boolean hasNext() {
-				return ri.isValid();
+				if (!ri.isValid()) {
+					ri.close();
+					return false;
+				}
+				return true;
 			}
 
 			@Override
@@ -337,6 +212,7 @@ public class RocksMultiMap<K, V> implements Multimap<K, V>, Closeable {
 
 				return entry;
 			}
+
 		};
 		return result;
 	}

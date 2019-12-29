@@ -1,83 +1,21 @@
 package it.cnr.istc.stlab.rocksmap;
 
 import java.io.Closeable;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.rocksdb.Options;
-import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import au.com.bytecode.opencsv.CSVReader;
-import au.com.bytecode.opencsv.CSVWriter;
 import it.cnr.istc.stlab.rocksmap.transformer.RocksTransformer;
 
-public class RocksMap<K, V> implements Map<K, V>, Closeable {
-
-	private static Logger logger = LoggerFactory.getLogger(RocksMap.class);
-	private RocksDB db;
-	private RocksTransformer<K> keyTransformer;
-	private RocksTransformer<V> valueTransformer;
-	private String rocksDBPath;
-
-	private static final char SEPARATOR_DUMP = '\t';
+public class RocksMap<K, V> extends RocksDBWrapper<K, V> implements Map<K, V>, Closeable {
 
 	public RocksMap(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer)
 			throws RocksDBException {
-		RocksDB.loadLibrary();
-		this.keyTransformer = keyTransformer;
-		this.valueTransformer = valueTransformer;
-		this.rocksDBPath = rocksDBPath;
-		File f = new File(rocksDBPath);
-		Options options = new Options();
-		options.setCreateIfMissing(true);
-		options.setIncreaseParallelism(8);
-		f.mkdirs();
-		db = RocksDB.open(options, rocksDBPath);
-	}
-
-	public RocksMap(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer,
-			String dumpFile) throws RocksDBException, IOException {
-		RocksDB.loadLibrary();
-		this.keyTransformer = keyTransformer;
-		this.valueTransformer = valueTransformer;
-		this.rocksDBPath = rocksDBPath;
-		File f = new File(rocksDBPath);
-		if (f.exists()) {
-			Options options = new Options();
-			options.setCreateIfMissing(true);
-			new File(rocksDBPath).mkdirs();
-			db = RocksDB.open(options, rocksDBPath);
-			logger.info("DB exists appending dump!");
-		} else {
-			db = RocksDB.open(rocksDBPath);
-		}
-		populateRocksDBFromDump(dumpFile);
-	}
-
-	private void populateRocksDBFromDump(String dumpFile) throws IOException, RocksDBException {
-		logger.info("Appending Dump to DB");
-		CSVReader csvr = new CSVReader(new FileReader(new File(dumpFile)), SEPARATOR_DUMP,
-				CSVWriter.NO_QUOTE_CHARACTER);
-		String[] line;
-		while ((line = csvr.readNext()) != null) {
-			db.put(line[0].getBytes(), line[1].getBytes());
-		}
-		csvr.close();
-	}
-
-	public String getRocksDBPath() {
-		return this.rocksDBPath;
+		super(rocksDBPath, keyTransformer, valueTransformer);
 	}
 
 	@Override
@@ -91,21 +29,8 @@ public class RocksMap<K, V> implements Map<K, V>, Closeable {
 	}
 
 	@Override
-	public boolean containsKey(Object key) {
-		@SuppressWarnings("unchecked")
-		K k = (K) key;
-		try {
-			byte[] v = db.get(keyTransformer.transform(k));
-			return v != null;
-		} catch (RocksDBException e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-
-	@Override
 	public boolean containsValue(Object value) {
-		// TODO Auto-generated method stub
+		// TODO
 		throw new UnsupportedOperationException();
 	}
 
@@ -140,7 +65,7 @@ public class RocksMap<K, V> implements Map<K, V>, Closeable {
 
 	@Override
 	public V remove(Object key) {
-		// TODO Auto-generated method stub
+		// TODO
 		throw new UnsupportedOperationException();
 	}
 
@@ -152,67 +77,15 @@ public class RocksMap<K, V> implements Map<K, V>, Closeable {
 	}
 
 	@Override
-	public void clear() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Set<K> keySet() {
-		Set<K> keys = new HashSet<>();
-		RocksIterator ri = db.newIterator();
-		ri.seekToFirst();
-		while (ri.isValid()) {
-			byte[] key = ri.key();
-			keys.add(keyTransformer.transform(key));
-			ri.next();
-		}
-		return keys;
-	}
-
-	@Override
 	public Collection<V> values() {
-		// TODO Auto-generated method stub
+		// TODO
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Set<Entry<K, V>> entrySet() {
-		// TODO Auto-generated method stub
+		// TODO
 		throw new UnsupportedOperationException();
-	}
-
-	public void toFile(String file, char separator) throws IOException {
-		CSVWriter csvw = new CSVWriter(new FileWriter(new File(file)), separator, CSVWriter.NO_QUOTE_CHARACTER);
-		RocksIterator ri = db.newIterator();
-		ri.seekToFirst();
-		while (ri.isValid()) {
-			byte[] key = ri.key();
-			byte[] val = ri.value();
-			csvw.writeNext(new String[] { new String(key), new String(val) });
-			ri.next();
-		}
-		csvw.close();
-	}
-
-	public void toFile() throws IOException {
-		logger.info("Dumping " + rocksDBPath + "/dump.tsv");
-		CSVWriter csvw = new CSVWriter(new FileWriter(new File(rocksDBPath + "/dump.tsv")), SEPARATOR_DUMP,
-				CSVWriter.NO_QUOTE_CHARACTER);
-		RocksIterator ri = db.newIterator();
-		ri.seekToFirst();
-		while (ri.isValid()) {
-			byte[] key = ri.key();
-			byte[] val = ri.value();
-			csvw.writeNext(new String[] { new String(key), new String(val) });
-			ri.next();
-		}
-		csvw.close();
-	}
-
-	public void close() {
-		logger.info("Closing {}",this.rocksDBPath);
-//		db.close();
 	}
 
 	public Iterator<Entry<K, V>> iterator() {
@@ -222,7 +95,11 @@ public class RocksMap<K, V> implements Map<K, V>, Closeable {
 
 			@Override
 			public boolean hasNext() {
-				return ri.isValid();
+				if (!ri.isValid()) {
+					ri.close();
+					return false;
+				}
+				return true;
 			}
 
 			@Override
@@ -251,6 +128,9 @@ public class RocksMap<K, V> implements Map<K, V>, Closeable {
 				return entry;
 			}
 		};
+		if (!ri.isValid()) {
+			ri.close();
+		}
 		return result;
 	}
 
