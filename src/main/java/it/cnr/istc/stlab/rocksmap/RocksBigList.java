@@ -124,23 +124,27 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 	@Override
 	public K remove(long index) {
 		rangeCheck(index);
-		logger.trace("Size {}", super.sizeLong());
-		long initSize = super.sizeLong();
-		for (long i = index; i < initSize - 1; i++) {
-			logger.trace("Moving {} to {}", i + 1, i);
-			try {
+		logger.trace("Size {}", sizeLong());
+		long initSize = sizeLong();
+
+		try {
+			K result = valueTransformer.transform(db.get(keyTransformer.transform(index)));
+			for (long i = index; i < initSize - 1; i++) {
+				logger.trace("Moving {} to {}", i + 1, i);
 				db.put(keyTransformer.transform(i), db.get(keyTransformer.transform(i + 1)));
-			} catch (RocksDBException e) {
-				e.printStackTrace();
 			}
+			size--;
+			super.removeKey(initSize-1);
+			return result;
+		} catch (RocksDBException e1) {
+			e1.printStackTrace();
 		}
-		size--;
-		super.removeKey(initSize - 1);
-		return super.removeKey(index);
+
+		return null;
 	}
 
 	private void rangeCheck(long index) {
-		if (index >= super.sizeLong())
+		if (index >= sizeLong())
 			throw new IndexOutOfBoundsException("Index out of bound " + index + "/" + super.sizeLong());
 	}
 

@@ -231,7 +231,7 @@ public abstract class RocksDBWrapper<K, V> {
 		Iterator<Entry<K, V>> it = entryIterator();
 		while (it.hasNext()) {
 			Entry<K, V> e = it.next();
-			System.out.println(e.getKey().toString() + " " + e.getValue().toString());
+			System.out.println(e.getKey().toString() + " -> " + e.getValue().toString());
 		}
 	}
 
