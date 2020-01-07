@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.rocksdb.RocksDBException;
-import org.rocksdb.RocksIterator;
 
 import it.cnr.istc.stlab.rocksmap.transformer.RocksTransformer;
 
@@ -20,11 +19,13 @@ public class RocksMap<K, V> extends RocksDBWrapper<K, V> implements Map<K, V>, C
 
 	@Override
 	public int size() {
+		// TODO
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public boolean isEmpty() {
+		// TODO
 		throw new UnsupportedOperationException();
 	}
 
@@ -39,6 +40,7 @@ public class RocksMap<K, V> extends RocksDBWrapper<K, V> implements Map<K, V>, C
 	public V get(Object key) {
 		V result = null;
 		try {
+			logger.debug("get {}", ((K) key).toString());
 			byte[] r = db.get(keyTransformer.transform((K) key));
 			if (r == null)
 				return null;
@@ -56,6 +58,7 @@ public class RocksMap<K, V> extends RocksDBWrapper<K, V> implements Map<K, V>, C
 			old_value = get(key);
 		}
 		try {
+			logger.debug("put {}", (key).toString(), value.toString());
 			db.put(keyTransformer.transform(key), valueTransformer.transform(value));
 		} catch (RocksDBException e) {
 			e.printStackTrace();
@@ -64,16 +67,12 @@ public class RocksMap<K, V> extends RocksDBWrapper<K, V> implements Map<K, V>, C
 	}
 
 	@Override
-	public V remove(Object key) {
+	public void putAll(Map<? extends K, ? extends V> m) {
+//		m.forEach((k, v) -> {
+//			this.put(k, v);
+//		});
 		// TODO
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void putAll(Map<? extends K, ? extends V> m) {
-		m.forEach((k, v) -> {
-			this.put(k, v);
-		});
 	}
 
 	@Override
@@ -89,49 +88,14 @@ public class RocksMap<K, V> extends RocksDBWrapper<K, V> implements Map<K, V>, C
 	}
 
 	public Iterator<Entry<K, V>> iterator() {
-		RocksIterator ri = db.newIterator();
-		ri.seekToFirst();
-		Iterator<Entry<K, V>> result = new Iterator<Map.Entry<K, V>>() {
+		return super.entryIterator();
+	}
 
-			@Override
-			public boolean hasNext() {
-				if (!ri.isValid()) {
-					ri.close();
-					return false;
-				}
-				return true;
-			}
-
-			@Override
-			public Entry<K, V> next() {
-				byte[] val = ri.value();
-				byte[] key = ri.key();
-				Entry<K, V> entry = new Entry<K, V>() {
-
-					@Override
-					public K getKey() {
-						return keyTransformer.transform(key);
-
-					}
-
-					@Override
-					public V getValue() {
-						return valueTransformer.transform(val);
-					}
-
-					@Override
-					public V setValue(V value) {
-						throw new UnsupportedOperationException();
-					}
-				};
-				ri.next();
-				return entry;
-			}
-		};
-		if (!ri.isValid()) {
-			ri.close();
-		}
-		return result;
+	@SuppressWarnings("unchecked")
+	@Override
+	public V remove(Object key) {
+		V r = super.removeKey((K) key);
+		return r;
 	}
 
 }

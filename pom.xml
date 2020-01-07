@@ -131,7 +131,7 @@
 		<guava.version>23.0</guava.version>
 		<apachecommonscsv.version>1.5</apachecommonscsv.version>
 		<dsiutils.version>2.5.4</dsiutils.version>
-		<dsifastutil.version>8.2.2</dsifastutil.version>
+		<dsifastutil.version>8.3.0</dsifastutil.version>
 		<jackson.version>2.10.1</jackson.version>
 	</properties>
 

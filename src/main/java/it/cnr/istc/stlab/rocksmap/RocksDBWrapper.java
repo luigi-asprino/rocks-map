@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.rocksdb.CompactionPriority;
@@ -12,6 +15,7 @@ import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
+import org.rocksdb.WriteOptions;
 import org.rocksdb.util.SizeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +30,7 @@ public abstract class RocksDBWrapper<K, V> {
 
 	}
 
-	protected static Logger logger = LoggerFactory.getLogger(RocksMultiMap.class);
+	protected static Logger logger = LoggerFactory.getLogger(RocksDBWrapper.class);
 
 	protected RocksDB db;
 	protected RocksTransformer<K> keyTransformer;
@@ -118,6 +122,117 @@ public abstract class RocksDBWrapper<K, V> {
 	public void close() {
 		logger.info("Closing {}", this.rocksDBPath);
 		db.close();
+	}
+
+	public long sizeLong() {
+		long l = 0;
+		try {
+			l = db.getLongProperty("rocksdb.estimate-num-keys");
+		} catch (RocksDBException e) {
+			e.printStackTrace();
+		}
+		return l;
+	}
+
+	public V removeKey(K key) {
+		try {
+			byte[] k = keyTransformer.transform(key);
+			byte[] value = db.get(k);
+
+			if (value != null) {
+				logger.debug("Deleting {}", key.toString());
+//				db.singleDelete(k);
+//				db.deleteRange(k, k);
+//				db.singleDelete(key);
+				db.delete(new WriteOptions(), k);
+				logger.debug("Has Key {}", containsKey(key));
+				return valueTransformer.transform(value);
+			}
+		} catch (RocksDBException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public Iterator<Entry<K, V>> entryIterator() {
+		RocksIterator ri = db.newIterator();
+		ri.seekToFirst();
+		Iterator<Entry<K, V>> result = new Iterator<Map.Entry<K, V>>() {
+
+			@Override
+			public boolean hasNext() {
+				if (!ri.isValid()) {
+					ri.close();
+					return false;
+				}
+				return true;
+			}
+
+			@Override
+			public Entry<K, V> next() {
+				byte[] val = ri.value();
+				byte[] key = ri.key();
+				Entry<K, V> entry = new Entry<K, V>() {
+
+					@Override
+					public K getKey() {
+						return keyTransformer.transform(key);
+
+					}
+
+					@Override
+					public V getValue() {
+						return valueTransformer.transform(val);
+					}
+
+					@Override
+					public V setValue(V value) {
+						throw new UnsupportedOperationException();
+					}
+				};
+				ri.next();
+				return entry;
+			}
+		};
+		if (!ri.isValid()) {
+			ri.close();
+		}
+		return result;
+	}
+
+	public Iterator<V> valueIterator() {
+		RocksIterator ri = db.newIterator();
+		ri.seekToFirst();
+		Iterator<V> result = new Iterator<V>() {
+
+			@Override
+			public boolean hasNext() {
+				if (!ri.isValid()) {
+					ri.close();
+					return false;
+				}
+				return true;
+			}
+
+			@Override
+			public V next() {
+				byte[] val = ri.value();
+				ri.next();
+				return valueTransformer.transform(val);
+			}
+		};
+		if (!ri.isValid()) {
+			ri.close();
+		}
+		return result;
+	}
+
+	public void print() {
+		Iterator<Entry<K, V>> it = entryIterator();
+		while (it.hasNext()) {
+			Entry<K, V> e = it.next();
+			System.out.println(e.getKey().toString() + " " + e.getValue().toString());
+		}
 	}
 
 }
