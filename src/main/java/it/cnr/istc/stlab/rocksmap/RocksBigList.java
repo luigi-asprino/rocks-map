@@ -145,7 +145,7 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 
 	private void rangeCheck(long index) {
 		if (index >= sizeLong())
-			throw new IndexOutOfBoundsException("Index out of bound " + index + "/" + super.sizeLong());
+			throw new IndexOutOfBoundsException("Index out of bound " + index + "/" + sizeLong());
 	}
 
 	@Override
