@@ -16,6 +16,7 @@ public class DoubleArrayFixedDimensionTransformer implements RocksTransformer<do
 	public DoubleArrayFixedDimensionTransformer(int dimension) {
 		this.dimension = dimension;
 	}
+	
 
 	@Override
 	public double[] transform(byte[] value) {
