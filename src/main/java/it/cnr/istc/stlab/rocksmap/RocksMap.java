@@ -17,24 +17,6 @@ public class RocksMap<K, V> extends RocksDBWrapper<K, V> implements Map<K, V>, C
 		super(rocksDBPath, keyTransformer, valueTransformer);
 	}
 
-	@Override
-	public int size() {
-		// TODO
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public boolean isEmpty() {
-		// TODO
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public boolean containsValue(Object value) {
-		// TODO
-		throw new UnsupportedOperationException();
-	}
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public V get(Object key) {
@@ -66,6 +48,17 @@ public class RocksMap<K, V> extends RocksDBWrapper<K, V> implements Map<K, V>, C
 		return old_value;
 	}
 
+	@SuppressWarnings("unchecked")
+	@Override
+	public V remove(Object key) {
+		V r = super.removeKey((K) key);
+		return r;
+	}
+
+	public Iterator<Entry<K, V>> iterator() {
+		return super.entryIterator();
+	}
+
 	@Override
 	public void putAll(Map<? extends K, ? extends V> m) {
 //		m.forEach((k, v) -> {
@@ -87,15 +80,22 @@ public class RocksMap<K, V> extends RocksDBWrapper<K, V> implements Map<K, V>, C
 		throw new UnsupportedOperationException();
 	}
 
-	public Iterator<Entry<K, V>> iterator() {
-		return super.entryIterator();
+	@Override
+	public int size() {
+		// TODO
+		throw new UnsupportedOperationException();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public V remove(Object key) {
-		V r = super.removeKey((K) key);
-		return r;
+	public boolean isEmpty() {
+		// TODO
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean containsValue(Object value) {
+		// TODO
+		throw new UnsupportedOperationException();
 	}
 
 }

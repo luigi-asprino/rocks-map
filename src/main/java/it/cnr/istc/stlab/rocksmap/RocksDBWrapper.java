@@ -141,9 +141,6 @@ public abstract class RocksDBWrapper<K, V> {
 
 			if (value != null) {
 				logger.debug("Deleting {}", key.toString());
-//				db.singleDelete(k);
-//				db.deleteRange(k, k);
-//				db.singleDelete(key);
 				db.delete(new WriteOptions(), k);
 				logger.debug("Has Key {}", containsKey(key));
 				return valueTransformer.transform(value);

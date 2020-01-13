@@ -4,12 +4,14 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.LongStream;
 
 import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import it.cnr.istc.stlab.rocksmap.transformer.LongRocksTransformer;
+import it.cnr.istc.stlab.rocksmap.transformer.LongRocksTransformerByteBuffer;
 import it.cnr.istc.stlab.rocksmap.transformer.RocksTransformer;
 import it.unimi.dsi.fastutil.BigList;
 import it.unimi.dsi.fastutil.BigListIterator;
@@ -19,21 +21,15 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
 public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<K>, Collection<K>, BigSwapper {
 
 	private static Logger logger = LoggerFactory.getLogger(RocksBigList.class);
-	private long size = 0;
+	private AtomicLong size = new AtomicLong(0);
 
 	public RocksBigList(String rocksDBPath, RocksTransformer<K> valueTransformer) throws RocksDBException {
-		super(rocksDBPath, new LongRocksTransformer(), valueTransformer);
+		super(rocksDBPath, new LongRocksTransformerByteBuffer(), valueTransformer);
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return size == 0;
-	}
-
-	@Override
-	public boolean contains(Object o) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		return size.longValue() == 0;
 	}
 
 	@Override
@@ -42,34 +38,15 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 	}
 
 	@Override
-	public Object[] toArray() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public <T> T[] toArray(T[] a) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public boolean add(K e) {
+	public synchronized boolean add(K e) {
 		try {
-			db.put(keyTransformer.transform(sizeLong()), valueTransformer.transform(e));
-			size++;
+			db.put(keyTransformer.transform(size.getAndIncrement()), valueTransformer.transform(e));
 			return true;
 		} catch (RocksDBException e1) {
 			e1.printStackTrace();
 		}
 
 		return false;
-	}
-
-	@Override
-	public boolean containsAll(Collection<?> c) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -90,15 +67,9 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 	}
 
 	@Override
-	public boolean retainAll(Collection<?> c) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public void clear() {
 		super.clear();
-		size = 0;
+		size = new AtomicLong(0L);
 	}
 
 	@Override
@@ -122,19 +93,25 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 	}
 
 	@Override
-	public K remove(long index) {
+	public synchronized K remove(long index) {
 		rangeCheck(index);
 		logger.trace("Size {}", sizeLong());
-		long initSize = sizeLong();
-
+		long initSize = size.longValue();
 		try {
 			K result = valueTransformer.transform(db.get(keyTransformer.transform(index)));
-			for (long i = index; i < initSize - 1; i++) {
-				logger.trace("Moving {} to {}", i + 1, i);
-				db.put(keyTransformer.transform(i), db.get(keyTransformer.transform(i + 1)));
-			}
-			size--;
-			super.removeKey(initSize-1);
+			LongStream.range(index, initSize - 1).parallel().forEach(i -> {
+				try {
+					db.put(keyTransformer.transform(i), db.get(keyTransformer.transform(i + 1)));
+				} catch (RocksDBException e) {
+					e.printStackTrace();
+				}
+			});
+//			for (long i = index; i < initSize - 1; i++) {
+//				logger.trace("Moving {} to {}", i + 1, i);
+//				db.put(keyTransformer.transform(i), db.get(keyTransformer.transform(i + 1)));
+//			}
+			size.decrementAndGet();
+			super.removeKey(initSize - 1);
 			return result;
 		} catch (RocksDBException e1) {
 			e1.printStackTrace();
@@ -159,6 +136,66 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public long sizeLong() {
+		return size.longValue();
+	}
+
+	@Override
+	public void swap(long a, long b) {
+
+//		logger.trace("SWAP {} and {}", a, b);
+		K elemA = get(a);
+		K elemB = get(b);
+		try {
+			db.put(keyTransformer.transform(a), valueTransformer.transform(elemB));
+			db.put(keyTransformer.transform(b), valueTransformer.transform(elemA));
+		} catch (RocksDBException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public void sort(Comparator<K> c) {
+		it.unimi.dsi.fastutil.BigArrays.mergeSort(0, size.longValue(), new LongComparator() {
+			@Override
+			public int compare(long k1, long k2) {
+				K e1 = get(k1);
+				K e2 = get(k2);
+				return c.compare(e1, e2);
+			}
+		}, this);
+	}
+
+	@Override
+	public boolean contains(Object o) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Object[] toArray() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <T> T[] toArray(T[] a) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean containsAll(Collection<?> c) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean retainAll(Collection<?> c) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -215,36 +252,6 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 	public boolean remove(Object o) {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException();
-	}
-
-	public long sizeLong() {
-		return size;
-	}
-
-	@Override
-	public void swap(long a, long b) {
-
-//		logger.trace("SWAP {} and {}", a, b);
-		K elemA = get(a);
-		K elemB = get(b);
-		try {
-			db.put(keyTransformer.transform(a), valueTransformer.transform(elemB));
-			db.put(keyTransformer.transform(b), valueTransformer.transform(elemA));
-		} catch (RocksDBException e) {
-			e.printStackTrace();
-		}
-
-	}
-
-	public void sort(Comparator<K> c) {
-		it.unimi.dsi.fastutil.BigArrays.mergeSort(0, size, new LongComparator() {
-			@Override
-			public int compare(long k1, long k2) {
-				K e1 = get(k1);
-				K e2 = get(k2);
-				return c.compare(e1, e2);
-			}
-		}, this);
 	}
 
 }
