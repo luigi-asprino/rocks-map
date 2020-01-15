@@ -22,10 +22,10 @@ public class TestRocksMap {
 			assertEquals("v1", map.get("k2"));
 
 			assertEquals(1L, map.sizeLong());
-			
+
 			map.put("k3", "v1");
 			map.put("k4", "v1");
-			
+
 			assertEquals(3L, map.sizeLong());
 
 			TestUtils.clearTestFolder();

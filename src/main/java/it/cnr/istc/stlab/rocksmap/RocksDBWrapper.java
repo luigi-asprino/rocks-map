@@ -223,6 +223,33 @@ public abstract class RocksDBWrapper<K, V> {
 		}
 		return result;
 	}
+	
+	public Iterator<K> keyIterator() {
+		RocksIterator ri = db.newIterator();
+		ri.seekToFirst();
+		Iterator<K> result = new Iterator<K>() {
+
+			@Override
+			public boolean hasNext() {
+				if (!ri.isValid()) {
+					ri.close();
+					return false;
+				}
+				return true;
+			}
+
+			@Override
+			public K next() {
+				byte[] key = ri.key();
+				ri.next();
+				return keyTransformer.transform(key);
+			}
+		};
+		if (!ri.isValid()) {
+			ri.close();
+		}
+		return result;
+	}
 
 	public void print() {
 		Iterator<Entry<K, V>> it = entryIterator();

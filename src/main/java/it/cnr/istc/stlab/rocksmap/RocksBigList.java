@@ -146,11 +146,17 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 	public void swap(long a, long b) {
 
 //		logger.trace("SWAP {} and {}", a, b);
-		K elemA = get(a);
-		K elemB = get(b);
+//		K elemA = get(a);
+//		K elemB = get(b);
+		byte[] keyA = keyTransformer.transform(a);
+		byte[] keyB = keyTransformer.transform(b);
 		try {
-			db.put(keyTransformer.transform(a), valueTransformer.transform(elemB));
-			db.put(keyTransformer.transform(b), valueTransformer.transform(elemA));
+//			db.put(keyTransformer.transform(a), valueTransformer.transform(elemB));
+//			db.put(keyTransformer.transform(b), valueTransformer.transform(elemA));
+			byte[] valA = db.get(keyA);
+			byte[] valB = db.get(keyB);
+			db.put(keyA, valB);
+			db.put(keyB, valA);
 		} catch (RocksDBException e) {
 			e.printStackTrace();
 		}
