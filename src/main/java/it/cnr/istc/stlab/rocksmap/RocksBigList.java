@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import it.cnr.istc.stlab.rocksmap.transformer.LongRocksTransformerByteBuffer;
 import it.cnr.istc.stlab.rocksmap.transformer.RocksTransformer;
+import it.cnr.istc.stlab.rocksmap.utils.ParallelQuickSort;
 import it.unimi.dsi.fastutil.BigList;
 import it.unimi.dsi.fastutil.BigListIterator;
 import it.unimi.dsi.fastutil.BigSwapper;
@@ -164,7 +165,7 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 	}
 
 	public void sort(Comparator<K> c) {
-		it.unimi.dsi.fastutil.BigArrays.mergeSort(0, size.longValue(), new LongComparator() {
+		ParallelQuickSort.quickSort(0, size.longValue(), new LongComparator() {
 			@Override
 			public int compare(long k1, long k2) {
 				K e1 = get(k1);
