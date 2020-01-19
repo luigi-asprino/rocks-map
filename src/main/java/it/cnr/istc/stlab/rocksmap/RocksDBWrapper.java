@@ -12,6 +12,7 @@ import java.util.Set;
 import org.rocksdb.CompactionPriority;
 import org.rocksdb.LRUCache;
 import org.rocksdb.Options;
+import org.rocksdb.ReadOptions;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
@@ -27,7 +28,6 @@ public abstract class RocksDBWrapper<K, V> {
 
 	static {
 		RocksDB.loadLibrary();
-
 	}
 
 	protected static Logger logger = LoggerFactory.getLogger(RocksDBWrapper.class);
@@ -49,9 +49,9 @@ public abstract class RocksDBWrapper<K, V> {
 		File f = new File(rocksDBPath);
 		Options options = new Options();
 		options.setCreateIfMissing(true).setWriteBufferSize(512 * SizeUnit.MB).setMaxWriteBufferNumber(4)
-				.setIncreaseParallelism(16).setRowCache(c).setMaxBackgroundCompactions(4)
-				.setLevelCompactionDynamicLevelBytes(true).setMaxBackgroundFlushes(2).setBytesPerSync(1048576)
-				.setCompactionPriority(CompactionPriority.MinOverlappingRatio);
+				.setIncreaseParallelism(Runtime.getRuntime().availableProcessors()).setRowCache(c)
+				.setMaxBackgroundCompactions(4).setLevelCompactionDynamicLevelBytes(true).setMaxBackgroundFlushes(2)
+				.setBytesPerSync(1048576).setCompactionPriority(CompactionPriority.MinOverlappingRatio);
 		f.mkdirs();
 		db = RocksDB.open(options, rocksDBPath);
 	}
@@ -60,11 +60,11 @@ public abstract class RocksDBWrapper<K, V> {
 		return this.rocksDBPath;
 	}
 
-	public boolean containsKey(Object key) {
+	public boolean containsKey(final Object key) {
 		@SuppressWarnings("unchecked")
-		K k = (K) key;
+		final K k = (K) key;
 		try {
-			byte[] v = db.get(keyTransformer.transform(k));
+			final byte[] v = db.get(keyTransformer.transform(k));
 			return v != null;
 		} catch (RocksDBException e) {
 			e.printStackTrace();
@@ -73,18 +73,29 @@ public abstract class RocksDBWrapper<K, V> {
 	}
 
 	public void clear() {
-		RocksIterator ri = db.newIterator();
+		ReadOptions ro = new ReadOptions();
+		ro.setFillCache(false);
+		RocksIterator ri = db.newIterator(ro);
 		ri.seekToFirst();
-		byte[] first = ri.key();
+		final byte[] first = ri.key();
 		ri.seekToLast();
-		byte[] last = ri.key();
+		final byte[] last = ri.key();
+		ri.close();
 		try {
 			db.deleteRange(first, last);
 			db.delete(last);
 		} catch (RocksDBException e) {
 			e.printStackTrace();
 		}
-		ri.close();
+	}
+
+	public void deleteRange(final byte[] first, final byte[] lastInclusive) {
+		try {
+			db.deleteRange(first, lastInclusive);
+			db.delete(lastInclusive);
+		} catch (RocksDBException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public Set<K> keySet() {
@@ -136,8 +147,8 @@ public abstract class RocksDBWrapper<K, V> {
 
 	public V removeKey(K key) {
 		try {
-			byte[] k = keyTransformer.transform(key);
-			byte[] value = db.get(k);
+			final byte[] k = keyTransformer.transform(key);
+			final byte[] value = db.get(k);
 
 			if (value != null) {
 				logger.debug("Deleting {}", key.toString());
@@ -152,7 +163,9 @@ public abstract class RocksDBWrapper<K, V> {
 	}
 
 	public Iterator<Entry<K, V>> entryIterator() {
-		RocksIterator ri = db.newIterator();
+		ReadOptions ro = new ReadOptions();
+		ro.setFillCache(false);
+		RocksIterator ri = db.newIterator(ro);
 		ri.seekToFirst();
 		Iterator<Entry<K, V>> result = new Iterator<Map.Entry<K, V>>() {
 
@@ -198,7 +211,9 @@ public abstract class RocksDBWrapper<K, V> {
 	}
 
 	public Iterator<V> valueIterator() {
-		RocksIterator ri = db.newIterator();
+		ReadOptions ro = new ReadOptions();
+		ro.setFillCache(false);
+		RocksIterator ri = db.newIterator(ro);
 		ri.seekToFirst();
 		Iterator<V> result = new Iterator<V>() {
 
@@ -206,6 +221,7 @@ public abstract class RocksDBWrapper<K, V> {
 			public boolean hasNext() {
 				if (!ri.isValid()) {
 					ri.close();
+					ro.close();
 					return false;
 				}
 				return true;
@@ -220,12 +236,15 @@ public abstract class RocksDBWrapper<K, V> {
 		};
 		if (!ri.isValid()) {
 			ri.close();
+			ro.close();
 		}
 		return result;
 	}
-	
+
 	public Iterator<K> keyIterator() {
-		RocksIterator ri = db.newIterator();
+		ReadOptions ro = new ReadOptions();
+		ro.setFillCache(false);
+		RocksIterator ri = db.newIterator(ro);
 		ri.seekToFirst();
 		Iterator<K> result = new Iterator<K>() {
 
@@ -233,6 +252,7 @@ public abstract class RocksDBWrapper<K, V> {
 			public boolean hasNext() {
 				if (!ri.isValid()) {
 					ri.close();
+					ro.close();
 					return false;
 				}
 				return true;
@@ -247,6 +267,7 @@ public abstract class RocksDBWrapper<K, V> {
 		};
 		if (!ri.isValid()) {
 			ri.close();
+			ro.close();
 		}
 		return result;
 	}

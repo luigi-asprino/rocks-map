@@ -3,11 +3,14 @@ package it.cnr.istc.stlab.rocksmap;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.stream.LongStream;
 
 import org.rocksdb.RocksDBException;
+import org.rocksdb.RocksIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +39,57 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 	@Override
 	public Iterator<K> iterator() {
 		return super.valueIterator();
+	}
+
+	public Spliterator<K> spliterator() {
+		RocksIterator ri = db.newIterator();
+		ri.seekToFirst();
+		return new RocksSpliterator(ri, 0L, size64());
+	}
+
+	class RocksSpliterator implements Spliterator<K> {
+		private RocksIterator ri;
+		private Long endExclusive;
+
+		RocksSpliterator(RocksIterator ri, Long start, Long endExclusive) {
+			this.ri = ri;
+			ri.seek(keyTransformer.transform(start));
+			this.endExclusive = endExclusive;
+		}
+
+		@Override
+		public boolean tryAdvance(Consumer<? super K> action) {
+			if (!ri.isValid() || keyTransformer.transform(ri.key()) >= endExclusive) {
+				ri.close();
+				return false;
+			}
+			final byte[] val = ri.value();
+			action.accept(valueTransformer.transform(val));
+			ri.next();
+			return true;
+		}
+
+		@Override
+		public Spliterator<K> trySplit() {
+			final Long currentPos = keyTransformer.transform(ri.key());
+			final Long newIteratorStart = (currentPos - endExclusive) / 2;
+			final Long newIteratorEnd = endExclusive;
+			endExclusive = newIteratorStart;
+			return new RocksSpliterator(db.newIterator(), newIteratorStart, newIteratorEnd);
+		}
+
+		@Override
+		public long estimateSize() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public int characteristics() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
 	}
 
 	@Override
@@ -79,10 +133,10 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 	}
 
 	@Override
-	public K get(long index) {
+	public K get(final long index) {
 		rangeCheck(index);
 		try {
-			byte[] elemToReturn = db.get(keyTransformer.transform(index));
+			final byte[] elemToReturn = db.get(keyTransformer.transform(index));
 			if (elemToReturn == null)
 				return null;
 			K objectTOReturn = valueTransformer.transform(elemToReturn);
@@ -144,18 +198,18 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 	}
 
 	@Override
-	public void swap(long a, long b) {
+	public void swap(final long a, final long b) {
 
 //		logger.trace("SWAP {} and {}", a, b);
 //		K elemA = get(a);
 //		K elemB = get(b);
-		byte[] keyA = keyTransformer.transform(a);
-		byte[] keyB = keyTransformer.transform(b);
+		final byte[] keyA = keyTransformer.transform(a);
+		final byte[] keyB = keyTransformer.transform(b);
 		try {
 //			db.put(keyTransformer.transform(a), valueTransformer.transform(elemB));
 //			db.put(keyTransformer.transform(b), valueTransformer.transform(elemA));
-			byte[] valA = db.get(keyA);
-			byte[] valB = db.get(keyB);
+			final byte[] valA = db.get(keyA);
+			final byte[] valB = db.get(keyB);
 			db.put(keyA, valB);
 			db.put(keyB, valA);
 		} catch (RocksDBException e) {
@@ -163,6 +217,10 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 		}
 
 	}
+// TODO
+//	public Stream<K> stream() {
+//		return null;
+//	}
 
 	public void sort(Comparator<K> c) {
 		ParallelQuickSort.quickSort(0, size.longValue(), new LongComparator() {
