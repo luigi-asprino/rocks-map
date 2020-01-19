@@ -49,10 +49,11 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 
 	class RocksSpliterator implements Spliterator<K> {
 		private RocksIterator ri;
-		private Long endExclusive;
+		private Long endExclusive, start;
 
 		RocksSpliterator(RocksIterator ri, Long start, Long endExclusive) {
 			this.ri = ri;
+			this.start = start;
 			ri.seek(keyTransformer.transform(start));
 			this.endExclusive = endExclusive;
 		}
@@ -80,14 +81,12 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 
 		@Override
 		public long estimateSize() {
-			// TODO Auto-generated method stub
-			return 0;
+			return endExclusive - start;
 		}
 
 		@Override
 		public int characteristics() {
-			// TODO Auto-generated method stub
-			return 0;
+			return SIZED;
 		}
 
 	}

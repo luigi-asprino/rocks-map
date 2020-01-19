@@ -36,8 +36,7 @@ public class RocksStream<K> implements Stream<K> {
 
 	@Override
 	public Spliterator<K> spliterator() {
-		// TODO Auto-generated method stub
-		return null;
+		return list.spliterator();
 	}
 
 	@Override
