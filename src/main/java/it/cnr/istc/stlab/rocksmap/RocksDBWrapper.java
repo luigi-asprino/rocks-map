@@ -173,6 +173,7 @@ public abstract class RocksDBWrapper<K, V> {
 			public boolean hasNext() {
 				if (!ri.isValid()) {
 					ri.close();
+					ro.close();
 					return false;
 				}
 				return true;
@@ -206,6 +207,7 @@ public abstract class RocksDBWrapper<K, V> {
 		};
 		if (!ri.isValid()) {
 			ri.close();
+			ro.close();
 		}
 		return result;
 	}
