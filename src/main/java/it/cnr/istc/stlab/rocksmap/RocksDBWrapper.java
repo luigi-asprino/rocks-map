@@ -36,6 +36,7 @@ public abstract class RocksDBWrapper<K, V> {
 	protected RocksTransformer<K> keyTransformer;
 	protected RocksTransformer<V> valueTransformer;
 	protected String rocksDBPath;
+	protected boolean existed = false;
 	private static LRUCache c = new LRUCache(2 * SizeUnit.GB);
 
 	protected static final char SEPARATOR_DUMP = '\t';
@@ -47,6 +48,7 @@ public abstract class RocksDBWrapper<K, V> {
 		this.valueTransformer = valueTransformer;
 		this.rocksDBPath = rocksDBPath;
 		File f = new File(rocksDBPath);
+		existed = f.exists();
 		Options options = new Options();
 		options.setCreateIfMissing(true).setWriteBufferSize(512 * SizeUnit.MB).setMaxWriteBufferNumber(4)
 				.setIncreaseParallelism(Runtime.getRuntime().availableProcessors()).setRowCache(c)

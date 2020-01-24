@@ -29,6 +29,14 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 
 	public RocksBigList(String rocksDBPath, RocksTransformer<K> valueTransformer) throws RocksDBException {
 		super(rocksDBPath, new LongRocksTransformerByteBuffer(), valueTransformer);
+		if (existed) {
+			RocksIterator ri = db.newIterator();
+			ri.seekToLast();
+			ri.prev();
+			size = new AtomicLong(keyTransformer.transform(ri.key()) + 1);
+			ri.close();
+		}
+
 	}
 
 	@Override
@@ -224,9 +232,9 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 	public void sort(Comparator<K> c) {
 		ParallelQuickSort.quickSort(0, size.longValue(), new LongComparator() {
 			@Override
-			public int compare(long k1, long k2) {
-				K e1 = get(k1);
-				K e2 = get(k2);
+			public int compare(final long k1, final long k2) {
+				final K e1 = get(k1);
+				final K e2 = get(k2);
 				return c.compare(e1, e2);
 			}
 		}, this);
