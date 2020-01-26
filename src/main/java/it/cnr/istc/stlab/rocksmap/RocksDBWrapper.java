@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.rocksdb.BlockBasedTableConfig;
 import org.rocksdb.CompactionPriority;
 import org.rocksdb.LRUCache;
 import org.rocksdb.Options;
@@ -37,7 +38,6 @@ public abstract class RocksDBWrapper<K, V> {
 	protected RocksTransformer<V> valueTransformer;
 	protected String rocksDBPath;
 	protected boolean existed = false;
-	private static LRUCache c = new LRUCache(2 * SizeUnit.GB);
 
 	protected static final char SEPARATOR_DUMP = '\t';
 
@@ -49,11 +49,38 @@ public abstract class RocksDBWrapper<K, V> {
 		this.rocksDBPath = rocksDBPath;
 		File f = new File(rocksDBPath);
 		existed = f.exists();
+
+		// Derived from
+		// https://github.com/facebook/rocksdb/wiki/Setup-Options-and-Basic-Tuning
+
 		Options options = new Options();
-		options.setCreateIfMissing(true).setWriteBufferSize(512 * SizeUnit.MB).setMaxWriteBufferNumber(4)
-				.setIncreaseParallelism(Runtime.getRuntime().availableProcessors()).setRowCache(c)
-				.setMaxBackgroundCompactions(4).setLevelCompactionDynamicLevelBytes(true).setMaxBackgroundFlushes(2)
-				.setBytesPerSync(1048576).setCompactionPriority(CompactionPriority.MinOverlappingRatio);
+		BlockBasedTableConfig tableOptions = new BlockBasedTableConfig();
+		// table_options.block_size = 16 * 1024;
+		tableOptions.setBlockSize(16 * 1024);
+		// table_options.cache_index_and_filter_blocks = true;
+		tableOptions.setCacheIndexAndFilterBlocks(true);
+		// table_options.pin_l0_filter_and_index_blocks_in_cache = true;
+		tableOptions.setPinL0FilterAndIndexBlocksInCache(true);
+		// https://github.com/facebook/rocksdb/wiki/Setup-Options-and-Basic-Tuning#block-cache-size
+		tableOptions.setBlockCache(new LRUCache(1 * SizeUnit.GB));
+		//@f:off
+		options.setCreateIfMissing(true)
+			.setWriteBufferSize(512 * SizeUnit.MB)
+			.setMaxWriteBufferNumber(4)
+			.setIncreaseParallelism(Runtime.getRuntime().availableProcessors())
+			// table options
+			.setTableFormatConfig(tableOptions)
+			// cf_options.level_compaction_dynamic_level_bytes = true;
+			.setLevelCompactionDynamicLevelBytes(true)
+			// options.max_background_compactions = 4;
+			.setMaxBackgroundCompactions(4)
+			// options.max_background_flushes = 2;
+			.setMaxBackgroundFlushes(2)
+			// options.bytes_per_sync = 1048576;
+			.setBytesPerSync(1048576)
+			// options.compaction_pri = kMinOverlappingRatio;
+			.setCompactionPriority(CompactionPriority.MinOverlappingRatio);
+		//@f:on
 		f.mkdirs();
 		db = RocksDB.open(options, rocksDBPath);
 	}

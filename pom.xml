@@ -136,7 +136,7 @@
 		<apachecommons.version>2.1.1</apachecommons.version>
 		<commons-beanutils.version>1.9.3</commons-beanutils.version>
 		<sl4j.version>1.7.7</sl4j.version>
-		<rockdb.version>6.4.6</rockdb.version>
+		<rockdb.version>6.5.3</rockdb.version>
 		<guava.version>23.0</guava.version>
 		<apachecommonscsv.version>1.5</apachecommonscsv.version>
 		<dsiutils.version>2.5.4</dsiutils.version>

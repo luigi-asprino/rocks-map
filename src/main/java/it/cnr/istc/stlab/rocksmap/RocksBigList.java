@@ -168,10 +168,6 @@ public class RocksBigList<K> extends RocksDBWrapper<Long, K> implements BigList<
 					e.printStackTrace();
 				}
 			});
-//			for (long i = index; i < initSize - 1; i++) {
-//				logger.trace("Moving {} to {}", i + 1, i);
-//				db.put(keyTransformer.transform(i), db.get(keyTransformer.transform(i + 1)));
-//			}
 			size.decrementAndGet();
 			super.removeKey(initSize - 1);
 			return result;
