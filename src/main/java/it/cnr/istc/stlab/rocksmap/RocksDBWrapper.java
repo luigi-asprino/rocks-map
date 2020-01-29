@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.rocksdb.BlockBasedTableConfig;
 import org.rocksdb.CompactionPriority;
+import org.rocksdb.FlushOptions;
 import org.rocksdb.LRUCache;
 import org.rocksdb.Options;
 import org.rocksdb.ReadOptions;
@@ -66,7 +67,7 @@ public abstract class RocksDBWrapper<K, V> {
 		//@f:off
 		options.setCreateIfMissing(true)
 			.setWriteBufferSize(512 * SizeUnit.MB)
-			.setMaxWriteBufferNumber(4)
+			.setMaxWriteBufferNumber(2)
 			.setIncreaseParallelism(Runtime.getRuntime().availableProcessors())
 			// table options
 			.setTableFormatConfig(tableOptions)
@@ -87,6 +88,13 @@ public abstract class RocksDBWrapper<K, V> {
 
 	public String getRocksDBPath() {
 		return this.rocksDBPath;
+	}
+
+	public void flush() throws RocksDBException {
+		FlushOptions fo = new FlushOptions();
+		fo.setWaitForFlush(true);
+		db.flush(fo);
+		fo.close();
 	}
 
 	public boolean containsKey(final Object key) {
