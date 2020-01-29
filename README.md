@@ -1,5 +1,6 @@
 # Rocks-map
-A simple Java wrapper that transforms a [RocksDB](https://rocksdb.org/) instance into a Java Map.
+
+A simple Java wrapper that allows to create disk-backed huge collections (of million of elements) backed by [RocksDB](https://rocksdb.org/).
 
 ### Dependency
 
@@ -8,6 +9,10 @@ Rocks-map is available on maven central. To use the library you need to just add
 <dependency>
 	<groupId>it.cnr.istc.stlab</groupId>
 	<artifactId>rocksmap</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.3</version>
 </dependency>
 ```
+
+### Usage
+
+TODO
