@@ -134,7 +134,7 @@
 		<opencsv.version>2.3</opencsv.version>
 		<apachejena.version>3.12.0</apachejena.version>
 		<apachecommons.version>2.1.1</apachecommons.version>
-		<commons-beanutils.version>1.9.3</commons-beanutils.version>
+		<commons-beanutils.version>1.9.4</commons-beanutils.version>
 		<sl4j.version>1.7.7</sl4j.version>
 		<rockdb.version>6.5.3</rockdb.version>
 		<guava.version>23.0</guava.version>
