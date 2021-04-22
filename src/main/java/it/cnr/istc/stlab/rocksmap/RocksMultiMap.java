@@ -27,6 +27,11 @@ public class RocksMultiMap<K, V> extends RocksDBWrapper<K, V> implements Multima
 		super(rocksDBPath, keyTransformer, valueTransformer);
 	}
 
+	public RocksMultiMap(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer,
+			boolean enableCompression) throws RocksDBException {
+		super(rocksDBPath, keyTransformer, valueTransformer, enableCompression);
+	}
+
 	@Override
 	public int size() {
 		// TODO

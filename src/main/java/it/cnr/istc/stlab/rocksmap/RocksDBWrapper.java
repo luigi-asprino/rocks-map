@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.rocksdb.BlockBasedTableConfig;
 import org.rocksdb.CompactionPriority;
+import org.rocksdb.CompressionOptions;
 import org.rocksdb.FlushOptions;
 import org.rocksdb.LRUCache;
 import org.rocksdb.Options;
@@ -39,11 +40,17 @@ public abstract class RocksDBWrapper<K, V> {
 	protected RocksTransformer<V> valueTransformer;
 	protected String rocksDBPath;
 	protected boolean existed = false;
+	private CompressionOptions co = new CompressionOptions();
 
 	protected static final char SEPARATOR_DUMP = '\t';
 
 	public RocksDBWrapper(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer)
 			throws RocksDBException {
+		this(rocksDBPath, keyTransformer, valueTransformer, false);
+	}
+
+	public RocksDBWrapper(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer,
+			boolean enableCompression) throws RocksDBException {
 
 		this.keyTransformer = keyTransformer;
 		this.valueTransformer = valueTransformer;
@@ -74,15 +81,21 @@ public abstract class RocksDBWrapper<K, V> {
 			// cf_options.level_compaction_dynamic_level_bytes = true;
 			.setLevelCompactionDynamicLevelBytes(true)
 			// options.max_background_compactions = 4;
-			.setMaxBackgroundCompactions(4)
+//			.setMaxBackgroundCompactions(4)
 			// options.max_background_flushes = 2;
-			.setMaxBackgroundFlushes(2)
+//			.setMaxBackgroundFlushes(2)
 			// options.bytes_per_sync = 1048576;
 			.setBytesPerSync(1048576)
 			// options.compaction_pri = kMinOverlappingRatio;
 			.setCompactionPriority(CompactionPriority.MinOverlappingRatio);
 		//@f:on
 		f.mkdirs();
+
+		if (enableCompression) {
+			// FIXME check
+			options.setCompressionOptions(co.setEnabled(true));
+		}
+
 		db = RocksDB.open(options, rocksDBPath);
 	}
 
@@ -182,6 +195,8 @@ public abstract class RocksDBWrapper<K, V> {
 		return l;
 	}
 
+	private WriteOptions wo = new WriteOptions();
+
 	public V removeKey(K key) {
 		try {
 			final byte[] k = keyTransformer.transform(key);
@@ -189,7 +204,7 @@ public abstract class RocksDBWrapper<K, V> {
 
 			if (value != null) {
 				logger.debug("Deleting {}", key.toString());
-				db.delete(new WriteOptions(), k);
+				db.delete(wo, k);
 				logger.debug("Has Key {}", containsKey(key));
 				return valueTransformer.transform(value);
 			}

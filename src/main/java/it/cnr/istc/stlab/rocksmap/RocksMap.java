@@ -17,6 +17,11 @@ public class RocksMap<K, V> extends RocksDBWrapper<K, V> implements Map<K, V>, C
 		super(rocksDBPath, keyTransformer, valueTransformer);
 	}
 
+	public RocksMap(String rocksDBPath, RocksTransformer<K> keyTransformer, RocksTransformer<V> valueTransformer,
+			boolean enableCompression) throws RocksDBException {
+		super(rocksDBPath, keyTransformer, valueTransformer, enableCompression);
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public V get(Object key) {
