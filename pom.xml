@@ -141,7 +141,7 @@
 		<apachecommonscsv.version>1.5</apachecommonscsv.version>
 		<dsiutils.version>2.5.4</dsiutils.version>
 		<dsifastutil.version>8.3.0</dsifastutil.version>
-		<jackson.version>2.10.5.1</jackson.version>
+		<jackson.version>2.12.6.1</jackson.version>
 	</properties>
 
 	<dependencies>
